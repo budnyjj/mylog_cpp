@@ -1,0 +1,17 @@
+# CMake temporary files
+CMakeCache.txt
+Makefile
+CTestTestfile.cmake
+DartConfiguration.tcl
+CMakeFiles/
+
+# Global tags
+GPATH
+GRTAGS
+GTAGS    
+    
+# Intermediate directories    
+build/
+lib/
+out/
+Testing/
