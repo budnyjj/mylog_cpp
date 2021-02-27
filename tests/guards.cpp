@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "liblog/log.hpp"
+#include "log.hpp"
 
 
 using log::Buffer;

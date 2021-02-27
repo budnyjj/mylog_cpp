@@ -1,5 +1,5 @@
-#ifndef _LOG_H_
-#define _LOG_H_
+#ifndef _LOG_HPP_
+#define _LOG_HPP_
 
 #include <cstdio>
 #include <cstdint>
@@ -194,4 +194,4 @@ Logger::operator<<(const T& value) {
 
 } // namespace log
 
-#endif // _LOG_H_
+#endif // _LOG_HPP_

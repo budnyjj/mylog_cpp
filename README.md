@@ -3,7 +3,7 @@ Build
 
 Examples:
 ```
-cmake -DBUILD_EXAMPLES . && ./out/examples/example-*
+cmake -DBUILD_EXAMPLES=ON . && ./out/examples/example-*
 ```    
     
 Tests:

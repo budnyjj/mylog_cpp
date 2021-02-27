@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <iostream>
 
-#include "liblog/log.hpp"
+#include "log.hpp"
 
 
 using std::size_t;
