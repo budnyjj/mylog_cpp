@@ -16,6 +16,29 @@
 
 namespace log {
 
+enum class Level {
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    FATAL
+};
+
+struct Writer {
+
+    /**
+     * Writes message with to the output with specified log level.
+     *
+     * @param |lvl| log level
+     * @param |msg| zero-terminated UTF8-encoded message to write
+     *
+     * TODO: add return value
+     */
+    virtual void write(const Level lvl, const char* msg) const = 0;
+
+    virtual ~Writer() {}
+};
+
 struct Buffer {
     typedef std::size_t size_t;
 
@@ -46,6 +69,7 @@ struct Buffer {
 };
 
 struct StdBufferAdapter final : public std::streambuf {
+
     explicit StdBufferAdapter(Buffer& buffer) : buffer_(buffer) {}
 
     std::streamsize xsputn(
@@ -64,22 +88,30 @@ struct StdBufferAdapter final : public std::streambuf {
     Buffer& buffer_;
 };
 
-class StdOStreamProvider {
-    StdBufferAdapter adapter_;
+struct StdOStreamProvider {
 
- public:
     explicit StdOStreamProvider(Buffer& buffer)
      : adapter_(buffer), stream(&adapter_) {}
 
     std::ostream stream;
+
+ private:
+    StdBufferAdapter adapter_;
 };
 
 struct Logger {
+
     // TODO: pass tag
-    Logger() = default;
+    explicit Logger(const Level level, const Writer& writer)
+     : buffer_{},
+       lazy_stream_provider_{},
+       level_{level},
+       writer_{writer}
+    {}
+
     Logger(Logger&&) = default;
 
-    ~Logger() { puts(buffer_.c_str()); }
+    ~Logger() { writer_.write(level_, buffer_.c_str()); }
 
     template<typename T>
     Logger& operator<<(const T& value);
@@ -95,12 +127,9 @@ struct Logger {
 
     Buffer buffer_;
     std::unique_ptr<StdOStreamProvider> lazy_stream_provider_;
+    const Level level_;
+    const Writer& writer_;
 };
-
-
-inline Logger l() {
-    return Logger();
-}
 
 
 // Buffer implementation
