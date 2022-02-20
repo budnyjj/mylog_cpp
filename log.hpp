@@ -24,6 +24,7 @@ enum class Level {
     FATAL
 };
 
+template<class Impl>
 struct Writer {
 
     /**
@@ -34,9 +35,10 @@ struct Writer {
      *
      * TODO: add return value
      */
-    virtual void write(const Level lvl, const char* msg) const = 0;
-
-    virtual ~Writer() {}
+    template<Level Lvl>
+    void write(const char* msg) const {
+        static_cast<const Impl&>(*this).write<Lvl>(msg);
+    };
 };
 
 struct Buffer {
@@ -99,22 +101,35 @@ struct StdOStreamProvider {
     StdBufferAdapter adapter_;
 };
 
+template<class Writer, log::Level Lvl>
 struct Logger {
 
     // TODO: pass tag
-    explicit Logger(const Level level, const Writer& writer)
+    explicit Logger(const Writer& writer)
      : buffer_{},
        lazy_stream_provider_{},
-       level_{level},
        writer_{writer}
     {}
 
     Logger(Logger&&) = default;
 
-    ~Logger() { writer_.write(level_, buffer_.c_str()); }
+    ~Logger() { writer_.template write<Lvl>(buffer_.c_str()); }
 
     template<typename T>
-    Logger& operator<<(const T& value);
+    Logger& operator<<(const T& value) {
+        if constexpr (std::is_integral<T>::value) {
+            buffer_.put(value);
+        } else if constexpr (std::is_floating_point<T>::value) {
+            buffer_.put(value);
+        } else if constexpr (std::is_constructible<std::string_view, T>::value) {
+            buffer_.put(value);
+        } else if constexpr (std::is_base_of<std::exception, T>::value) {
+            // TODO: implement
+        } else {
+            stream() << value;
+        }
+        return *this;
+    }
 
  private:
     std::ostream& stream() {
@@ -127,7 +142,6 @@ struct Logger {
 
     Buffer buffer_;
     std::unique_ptr<StdOStreamProvider> lazy_stream_provider_;
-    const Level level_;
     const Writer& writer_;
 };
 
@@ -199,26 +213,6 @@ Buffer::put(const char* s, std::streamsize n) {
     std::char_traits<char>::copy(&static_[length_], s, num_chars_to_copy);
     length_ += num_chars_to_copy;
     return num_chars_to_copy;
-}
-
-
-// Logger implementation
-// TODO: add more cases
-template<typename T>
-inline Logger&
-Logger::operator<<(const T& value) {
-    if constexpr (std::is_integral<T>::value) {
-        buffer_.put(value);
-    } else if constexpr (std::is_floating_point<T>::value) {
-        buffer_.put(value);
-    } else if constexpr (std::is_constructible<std::string_view, T>::value) {
-        buffer_.put(value);
-    } else if constexpr (std::is_base_of<std::exception, T>::value) {
-        // TODO: implement
-    } else {
-        stream() << value;
-    }
-    return *this;
 }
 
 } // namespace log
