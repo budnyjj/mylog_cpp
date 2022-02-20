@@ -36,7 +36,7 @@ struct Writer {
      * TODO: add return value
      */
     template<Level Lvl>
-    void write(const char* msg) const {
+    void write(const std::string_view msg) const {
         static_cast<const Impl&>(*this).write<Lvl>(msg);
     };
 };
@@ -46,9 +46,9 @@ struct Buffer {
 
     Buffer() : static_(), length_() { }
 
-    const char* c_str() {
+    std::string_view view() {
         static_[length_] = '\0';
-        return &static_[0];
+        return std::string_view(&static_[0], length_);
     }
 
     size_t put(const int value);
@@ -113,7 +113,7 @@ struct Logger {
 
     Logger(Logger&&) = default;
 
-    ~Logger() { writer_.template write<Lvl>(buffer_.c_str()); }
+    ~Logger() { writer_.template write<Lvl>(buffer_.view()); }
 
     template<typename T>
     Logger& operator<<(const T& value) {
