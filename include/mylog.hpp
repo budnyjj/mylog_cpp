@@ -1,5 +1,5 @@
-#ifndef _LOG_HPP_
-#define _LOG_HPP_
+#ifndef _LOGGER_HPP_
+#define _LOGGER_HPP_
 
 #include <cstdio>
 #include <cstdint>
@@ -13,6 +13,9 @@
 #include <string_view>
 #include <utility>
 
+
+// Just an additional namespace to separate itself from the rest of the project.
+namespace my {
 
 namespace log {
 
@@ -36,8 +39,8 @@ struct Writer {
      * TODO: add return value
      */
     template<Level Lvl>
-    void write(const std::string_view msg) const {
-        static_cast<const Impl&>(*this).write<Lvl>(msg);
+    void write(std::string_view msg) const {
+        static_cast<const Impl&>(*this).template write<Lvl>(msg);
     };
 };
 
@@ -51,11 +54,18 @@ struct Buffer {
         return std::string_view(&static_[0], length_);
     }
 
-    size_t put(const int value);
-    size_t put(const float value);
-    size_t put(const double value);
-    size_t put(const long double value);
-    size_t put(const std::string_view& value);
+    size_t put(int8_t value);
+    size_t put(int16_t value);
+    size_t put(int32_t value);
+    size_t put(int64_t value);
+    size_t put(uint8_t value);
+    size_t put(uint16_t value);
+    size_t put(uint32_t value);
+    size_t put(uint64_t value);
+    size_t put(float value);
+    size_t put(double value);
+    size_t put(long double value);
+    size_t put(std::string_view value);
     size_t put(const char* s, std::streamsize n);
 
     /// The actual size of static storage.
@@ -101,7 +111,7 @@ struct StdOStreamProvider {
     StdBufferAdapter adapter_;
 };
 
-template<class Writer, log::Level Lvl>
+template<Level Lvl, class Writer>
 struct Logger {
 
     // TODO: pass tag
@@ -115,15 +125,15 @@ struct Logger {
 
     ~Logger() { writer_.template write<Lvl>(buffer_.view()); }
 
-    template<typename T>
-    Logger& operator<<(const T& value) {
-        if constexpr (std::is_integral<T>::value) {
+    template<typename V>
+    Logger& operator<<(const V& value) {
+        if constexpr (std::is_integral<V>::value) {
             buffer_.put(value);
-        } else if constexpr (std::is_floating_point<T>::value) {
+        } else if constexpr (std::is_floating_point<V>::value) {
             buffer_.put(value);
-        } else if constexpr (std::is_constructible<std::string_view, T>::value) {
+        } else if constexpr (std::is_constructible<std::string_view, V>::value) {
             buffer_.put(value);
-        } else if constexpr (std::is_base_of<std::exception, T>::value) {
+        } else if constexpr (std::is_base_of<std::exception, V>::value) {
             // TODO: implement
         } else {
             stream() << value;
@@ -151,7 +161,7 @@ struct Logger {
 // https://en.cppreference.com/w/cpp/io/basic_ostream/operator_ltlt
 // TODO: consider adding char* overload
 inline Buffer::size_t
-Buffer::put(const int value) {
+Buffer::put(int8_t value) {
     const auto init_end = &static_[length_];
     const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
     const auto chars_copied = p - init_end;
@@ -160,7 +170,70 @@ Buffer::put(const int value) {
 }
 
 inline Buffer::size_t
-Buffer::put(const float value) {
+Buffer::put(int16_t value) {
+    const auto init_end = &static_[length_];
+    const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
+    const auto chars_copied = p - init_end;
+    length_ += chars_copied;
+    return chars_copied;
+}
+
+inline Buffer::size_t
+Buffer::put(int32_t value) {
+    const auto init_end = &static_[length_];
+    const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
+    const auto chars_copied = p - init_end;
+    length_ += chars_copied;
+    return chars_copied;
+}
+
+inline Buffer::size_t
+Buffer::put(int64_t value) {
+    const auto init_end = &static_[length_];
+    const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
+    const auto chars_copied = p - init_end;
+    length_ += chars_copied;
+    return chars_copied;
+}
+
+inline Buffer::size_t
+Buffer::put(uint8_t value) {
+    const auto init_end = &static_[length_];
+    const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
+    const auto chars_copied = p - init_end;
+    length_ += chars_copied;
+    return chars_copied;
+}
+
+inline Buffer::size_t
+Buffer::put(uint16_t value) {
+    const auto init_end = &static_[length_];
+    const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
+    const auto chars_copied = p - init_end;
+    length_ += chars_copied;
+    return chars_copied;
+}
+
+inline Buffer::size_t
+Buffer::put(uint32_t value) {
+    const auto init_end = &static_[length_];
+    const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
+    const auto chars_copied = p - init_end;
+    length_ += chars_copied;
+    return chars_copied;
+}
+
+inline Buffer::size_t
+Buffer::put(uint64_t value) {
+    const auto init_end = &static_[length_];
+    const auto [p, _] = std::to_chars(init_end, &static_[STATIC_SIZE], value);
+    const auto chars_copied = p - init_end;
+    length_ += chars_copied;
+    return chars_copied;
+}
+
+inline Buffer::size_t
+Buffer::put(float value) {
     const auto max_chars_to_copy = STATIC_SIZE - length_;
     const auto chars_to_copy = snprintf(
         &static_[length_], max_chars_to_copy, "%f", value);
@@ -172,7 +245,7 @@ Buffer::put(const float value) {
 }
 
 inline Buffer::size_t
-Buffer::put(const double value) {
+Buffer::put(double value) {
     const auto max_chars_to_copy = STATIC_SIZE - length_;
     const auto chars_to_copy = snprintf(
         &static_[length_], max_chars_to_copy, "%lf", value);
@@ -184,7 +257,7 @@ Buffer::put(const double value) {
 }
 
 inline Buffer::size_t
-Buffer::put(const long double value) {
+Buffer::put(long double value) {
     const auto max_chars_to_copy = STATIC_SIZE - length_;
     const auto chars_to_copy = snprintf(
         &static_[length_], max_chars_to_copy, "%Lf", value);
@@ -196,7 +269,7 @@ Buffer::put(const long double value) {
 }
 
 inline Buffer::size_t
-Buffer::put(const std::string_view& value) {
+Buffer::put(std::string_view value) {
     // TODO: handle scenario when value length >= STATIC_MAX_LENGTH - length_
     const auto chars_copied =
         value.copy(&static_[length_], STATIC_MAX_CHARS - length_);
@@ -209,12 +282,15 @@ Buffer::put(const char* s, std::streamsize n) {
     // TODO: handle scenario when value n >= STATIC_MAX_LENGTH - length_
     const auto num_chars_to_copy = std::min(
         static_cast<std::streamsize>(STATIC_MAX_CHARS - length_),
-        n);
+        n
+    );
     std::char_traits<char>::copy(&static_[length_], s, num_chars_to_copy);
     length_ += num_chars_to_copy;
     return num_chars_to_copy;
 }
 
+} // engine
+
 } // namespace log
 
-#endif // _LOG_HPP_
+#endif // _MY_LOG_HPP_

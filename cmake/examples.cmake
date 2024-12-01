@@ -1,8 +1,12 @@
-add_executable(example-main examples/main.cpp)
+add_executable(
+        example-main
+        examples/logging.cpp
+        examples/main.cpp
+)
 target_include_directories(
     example-main
     PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    include
 )
 set_target_properties(
     example-main

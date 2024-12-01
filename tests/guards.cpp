@@ -2,18 +2,20 @@
 
 #include "gtest/gtest.h"
 
-#include "log.hpp"
+#include "logging.hpp"
 
 
-using log::Buffer;
-using log::Logger;
+using my::log::Buffer;
+using my::log::Level;
+using my::log::Logger;
 using std::unique_ptr;
 
 
-TEST(Basic, SizeGuard) {
+TEST(Basic, DebugPutsSizeGuard) {
     EXPECT_EQ(
-        sizeof(Logger),
+        sizeof(Logger<Level::DEBUG, PutsWriter>),
         sizeof(unique_ptr<void>)
             + Buffer::STATIC_SIZE
-            + sizeof(Buffer::size_t));
+            + sizeof(Buffer::size_t)
+    );
 }

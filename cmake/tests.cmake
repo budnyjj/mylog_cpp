@@ -27,11 +27,16 @@ add_subdirectory(
     EXCLUDE_FROM_ALL)
 
 
-add_executable(test-guards tests/guards.cpp)
+add_executable(
+    test-guards
+    examples/logging.cpp
+    tests/guards.cpp
+)
 target_include_directories(
     test-guards
     PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    include
+    examples
 )
 target_link_libraries(test-guards gtest_main)    
 set_target_properties(
@@ -41,11 +46,16 @@ set_target_properties(
 )    
 add_test(NAME test-guards COMMAND test-guards)
 
-add_executable(test-performance tests/performance.cpp)
+add_executable(
+    test-performance
+    examples/logging.cpp
+    tests/performance.cpp
+)
 target_include_directories(
     test-performance
     PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    include
+    examples
 )
 target_link_libraries(test-performance gtest_main)    
 set_target_properties(
